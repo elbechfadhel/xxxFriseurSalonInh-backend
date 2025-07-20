@@ -3,6 +3,7 @@ import cors from 'cors';
 import reservationRoutes from './routes/reservationRoutes';
 import employeeRoutes from "./routes/employeeRoutes";
 import verifyEmailRoutes from "./routes/verifyEmailRoutes";
+import authRoutes from "./routes/authRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/verify-email', verifyEmailRoutes);
+app.use('/api/admin', authRoutes);
 
 
 app.listen(PORT, () => {
