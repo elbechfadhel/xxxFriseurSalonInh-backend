@@ -1,21 +1,9 @@
-// routes/authRoutes.ts
+// src/routes/authRoutes.ts
 import express from 'express';
-import jwt from 'jsonwebtoken';
+import { adminLogin } from '../controllers/authController';
 
 const router = express.Router();
 
-router.post('/admin/login', (req, res) => {
-    const { password } = req.body;
-
-    if (password !== process.env.ADMIN_PASSWORD) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET!, {
-        expiresIn: '1d',
-    });
-
-    res.json({ token });
-});
+router.post('/login', adminLogin);
 
 export default router;
