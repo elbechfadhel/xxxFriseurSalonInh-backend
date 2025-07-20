@@ -28,6 +28,10 @@ export const createReservation = async (req: Request, res: Response) => {
 // Get reservations (optionally filtered by employeeId and/or date)
 export const getAllReservations = async (req: Request, res: Response) => {
   try {
+
+    console.log("🔑 Render ENV DATABASE_URL:", process.env.DATABASE_URL);
+
+
     const { employeeId, date } = req.query;
 
     const where: any = {};
