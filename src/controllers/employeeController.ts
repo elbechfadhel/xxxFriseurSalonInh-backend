@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
 import { prisma } from '../prisma/client';
+import fs from 'fs';
 
 // GET all employees
 export const getAllEmployees = async (_req: Request, res: Response) => {
     try {
         const employees = await prisma.employee.findMany({
             orderBy: { name: 'asc' },
+            select: { id: true, name: true, nameAr: true, createdAt: true, updatedAt: true } // exclude photo for performance
         });
         res.json(employees);
     } catch (error) {
@@ -32,12 +34,12 @@ export const getEmployeeById = async (req: Request, res: Response) => {
 export const createEmployee = async (req: Request, res: Response) => {
     try {
         const { name, nameAr } = req.body;
-        const photoUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+        const photo = req.file ? fs.readFileSync(req.file.path) : undefined;
 
         if (!name) return res.status(400).json({ error: 'Name is required.' });
 
         const employee = await prisma.employee.create({
-            data: { name, nameAr, photoUrl },
+            data: { name, nameAr, photo },
         });
 
         res.status(201).json(employee);
@@ -51,7 +53,7 @@ export const createEmployee = async (req: Request, res: Response) => {
 export const updateEmployee = async (req: Request, res: Response) => {
     try {
         const { name, nameAr } = req.body;
-        const photoUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+        const photo = req.file ? fs.readFileSync(req.file.path) : undefined;
 
         const existing = await prisma.employee.findUnique({ where: { id: req.params.id } });
         if (!existing) return res.status(404).json({ error: 'Employee not found.' });
@@ -61,7 +63,7 @@ export const updateEmployee = async (req: Request, res: Response) => {
             data: {
                 name: name ?? existing.name,
                 nameAr: nameAr ?? existing.nameAr,
-                photoUrl: photoUrl ?? existing.photoUrl,
+                photo: photo ?? existing.photo,
             },
         });
 
@@ -75,7 +77,6 @@ export const updateEmployee = async (req: Request, res: Response) => {
 // DELETE employee
 export const deleteEmployee = async (req: Request, res: Response) => {
     try {
-        // Check if employee has reservations
         const reservationsCount = await prisma.reservation.count({
             where: { employeeId: req.params.id },
         });
@@ -91,5 +92,25 @@ export const deleteEmployee = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Failed to delete employee.' });
+    }
+};
+
+// GET employee photo
+export const getEmployeePhoto = async (req: Request, res: Response) => {
+    try {
+        const employee = await prisma.employee.findUnique({
+            where: { id: req.params.id },
+            select: { photo: true },
+        });
+
+        if (!employee || !employee.photo) {
+            return res.status(404).send('No photo found');
+        }
+
+        res.set('Content-Type', 'image/jpeg'); // or image/png
+        res.send(employee.photo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to retrieve photo.' });
     }
 };
