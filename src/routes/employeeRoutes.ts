@@ -5,6 +5,7 @@ import {
     createEmployee,
     updateEmployee,
     deleteEmployee,
+    getEmployeePhoto, // <-- Add this
 } from '../controllers/employeeController';
 import { upload } from '../middleware/upload';
 
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // Get all employees
 router.get('/', getAllEmployees);
+
+// Get employee photo
+router.get('/:id/photo', getEmployeePhoto); // <-- Add this route
 
 // Get single employee
 router.get('/:id', getEmployeeById);
