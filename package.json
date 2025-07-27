@@ -4,10 +4,11 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
-    "build": "tsc",
+    "build": "npm run prisma:sync && tsc",
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init"
+    "prisma:migrate": "prisma migrate dev --name init",
+    "prisma:sync": "prisma migrate deploy && prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
