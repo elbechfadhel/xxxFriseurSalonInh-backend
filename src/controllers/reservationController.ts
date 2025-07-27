@@ -23,6 +23,54 @@ export const createReservation = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Something went wrong.' });
   }
 };
+export const deleteReservation = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const existing = await prisma.reservation.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    await prisma.reservation.delete({ where: { id } });
+
+    res.status(200).json({ message: 'Reservation deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting reservation:', error);
+    res.status(500).json({ error: 'Failed to delete reservation' });
+  }
+};
+
+export const updateReservation = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { customerName, email, phone, service, date, employeeId } = req.body;
+
+    const existing = await prisma.reservation.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ error: 'Reservation not found' });
+    }
+
+    const updatedReservation = await prisma.reservation.update({
+      where: { id },
+      data: {
+        customerName,
+        email,
+        phone,
+        service,
+        date: date ? new Date(date) : existing.date,
+        employeeId
+      },
+    });
+
+    res.status(200).json(updatedReservation);
+  } catch (error) {
+    console.error('Error updating reservation:', error);
+    res.status(500).json({ error: 'Failed to update reservation' });
+  }
+};
+
+
 
 
 // Get reservations (optionally filtered by employeeId and/or date)
