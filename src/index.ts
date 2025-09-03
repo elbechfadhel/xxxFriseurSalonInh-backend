@@ -5,6 +5,7 @@ import reservationRoutes from './routes/reservationRoutes';
 import employeeRoutes from './routes/employeeRoutes';
 import verifyEmailRoutes from './routes/verifyEmailRoutes';
 import authRoutes from './routes/authRoutes';
+import feedbackRoutesRoutes from './routes/feedbackRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -19,6 +20,7 @@ app.use('/api/reservations', reservationRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/verify-email', verifyEmailRoutes);
 app.use('/api/admin', authRoutes);
+app.use('/api/feedback', feedbackRoutesRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
