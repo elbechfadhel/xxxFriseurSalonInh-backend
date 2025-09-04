@@ -64,3 +64,11 @@ export const validateFeedback = (req: Request, res: Response) => {
     fb.valid = typeof overrideValid === "boolean" ? overrideValid : true;
     res.json(fb);
 };
+export const deleteFeedback = (req: Request, res: Response) => {
+    const { id } = req.params;
+    const idx = feedbacks.findIndex((f) => f.id === id);
+    if (idx === -1) return res.status(404).json({ error: "Feedback not found" });
+
+    const [removed] = feedbacks.splice(idx, 1);
+    return res.status(200).json(removed); // or res.status(204).send() if you prefer no body
+};
