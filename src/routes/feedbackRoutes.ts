@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/", createFeedback);
 router.get("/", listFeedback);
-router.patch("/:id/approve", /* requireAdmin, */ validateFeedback);
-router.delete("/:id", /* requireAdmin, */ deleteFeedback);
+router.patch("/:id/approve", validateFeedback);
+router.delete("/:id", deleteFeedback);
 
 export default router;
