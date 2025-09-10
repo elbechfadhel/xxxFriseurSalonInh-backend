@@ -16,9 +16,10 @@ model Reservation {
   service      String
   date         DateTime
   createdAt    DateTime @default(now())
-  employeeId    String
-  employee      Employee @relation(fields: [employeeId], references: [id])
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id])
 
+  @@unique([employeeId, date], name: "uniq_employee_slot")
 }
 model Employee {
   id            String         @id @default(uuid())

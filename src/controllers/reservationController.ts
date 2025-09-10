@@ -1,26 +1,38 @@
 import { Request, Response } from 'express';
 import { prisma } from '../prisma/client';
+import {normalizeToSlotStartUTC} from "../lib/time";
+import { Prisma } from '@prisma/client';
 
 // Create a new reservation
 export const createReservation = async (req: Request, res: Response) => {
   try {
     const { customerName, email, phone, service, date, employeeId } = req.body;
 
+    if (!customerName || !email || !date || !employeeId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const slotStart = normalizeToSlotStartUTC(date);
+
     const reservation = await prisma.reservation.create({
       data: {
         customerName,
-        email,          // ✅ use email
-        phone: phone || null, // ✅ optional if provided
+        email,
+        phone: phone || null,
         service,
-        date: new Date(date),
+        date: slotStart,       // store normalized slot
         employeeId,
       },
     });
 
-    res.status(201).json(reservation);
-  } catch (error) {
+    return res.status(201).json(reservation);
+  } catch (error: any) {
+    // Unique violation -> slot already taken
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return res.status(409).json({ error: 'Timeslot already taken' });
+    }
     console.error('Error creating reservation:', error);
-    res.status(500).json({ error: 'Something went wrong.' });
+    return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
 export const deleteReservation = async (req: Request, res: Response) => {
@@ -87,12 +99,14 @@ export const getAllReservations = async (req: Request, res: Response) => {
     if (employeeId) where.employeeId = String(employeeId);
 
     if (date) {
-      const selectedDate = new Date(date as string);
-      const startOfDay = new Date(selectedDate.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(selectedDate.setHours(23, 59, 59, 999));
+      const ymd = String(date); // expects YYYY-MM-DD or ISO
+      const startOfDay = new Date(ymd + 'T00:00:00.000Z');
+      const endOfDayExclusive = new Date(startOfDay);
+      endOfDayExclusive.setUTCDate(startOfDay.getUTCDate() + 1);
+
       where.date = {
         gte: startOfDay,
-        lte: endOfDay,
+        lt: endOfDayExclusive,
       };
     }
 
