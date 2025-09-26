@@ -38,3 +38,16 @@ model Feedback {
   approved  Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+model PhoneOtp {
+  id           String   @id @default(cuid())
+  phone        String   @unique
+  codeHash     String
+  expiresAt    DateTime
+  attempts     Int      @default(0)
+  lockedUntil  DateTime?
+  lastSentAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([expiresAt])
+}
