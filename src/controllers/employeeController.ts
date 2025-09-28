@@ -6,7 +6,7 @@ import fs from 'fs';
 export const getAllEmployees = async (_req: Request, res: Response) => {
     try {
         const employees = await prisma.employee.findMany({
-            orderBy: { name: 'asc' },
+            orderBy: { createdAt: 'asc' },
             select: { id: true, name: true, nameAr: true, createdAt: true, updatedAt: true } // exclude photo for performance
         });
         res.json(employees);
