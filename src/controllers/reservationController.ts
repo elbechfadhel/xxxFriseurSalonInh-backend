@@ -17,7 +17,7 @@ export const createReservation = async (req: Request, res: Response) => {
     const reservation = await prisma.reservation.create({
       data: {
         customerName,
-        email,
+        email: email || null,
         phone: phone || null,
         service,
         date: slotStart,       // store normalized slot
@@ -67,8 +67,8 @@ export const updateReservation = async (req: Request, res: Response) => {
       where: { id },
       data: {
         customerName,
-        email,
-        phone,
+        email: email || null,
+        phone: phone || null,
         service,
         date: date ? new Date(date) : existing.date,
         employeeId
@@ -89,11 +89,7 @@ export const updateReservation = async (req: Request, res: Response) => {
 export const getAllReservations = async (req: Request, res: Response) => {
   try {
 
-    console.log("🔑 Render ENV DATABASE_URL:", process.env.DATABASE_URL);
-
-
     const { employeeId, date } = req.query;
-
     const where: any = {};
 
     if (employeeId) where.employeeId = String(employeeId);
