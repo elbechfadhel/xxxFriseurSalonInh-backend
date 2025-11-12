@@ -6,13 +6,34 @@ import { Prisma } from '@prisma/client';
 // Create a new reservation
 export const createReservation = async (req: Request, res: Response) => {
   try {
-    const { customerName, email, phone, service, date, employeeId } = req.body;
-
-    if (!customerName  || !date || !employeeId) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
+    const { customerName, email, phone, service, date, employeeId, verificationMethod } = req.body;
+    if (!date || !employeeId) return res.status(400).json({ error: 'Missing required fields' });
 
     const slotStart = normalizeToSlotStartUTC(date);
+
+    const isAccount = verificationMethod === 'account' && (req as any).customer;
+    if (isAccount) {
+      const customer = (req as any).customer as {
+        id: string; name: string; email: string; phoneE164?: string | null; phoneVerified: boolean;
+      };
+
+      const reservation = await prisma.reservation.create({
+        data: {
+          customerName: customer.name,
+          email: customer.email,
+          phone: customer.phoneE164 ?? null,
+          service,
+          date: slotStart,
+          employeeId,
+          verificationMethod: 'account',
+          customerId: customer.id,
+        },
+      });
+      return res.status(201).json(reservation);
+    }
+
+    // Guest (SMS)
+    if (!customerName) return res.status(400).json({ error: 'Missing customerName for guest' });
 
     const reservation = await prisma.reservation.create({
       data: {
@@ -20,14 +41,15 @@ export const createReservation = async (req: Request, res: Response) => {
         email: email || null,
         phone: phone || null,
         service,
-        date: slotStart,       // store normalized slot
+        date: slotStart,
         employeeId,
+        verificationMethod: 'sms',
+        customerId: null,
       },
     });
 
     return res.status(201).json(reservation);
   } catch (error: any) {
-    // Unique violation -> slot already taken
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return res.status(409).json({ error: 'Timeslot already taken' });
     }

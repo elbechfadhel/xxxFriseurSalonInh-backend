@@ -9,6 +9,7 @@ import {
     createOrRefreshOtp,
     verifyOtpCode,
 } from "../services/otpService";
+import {signOtpVerified} from "../middleware/smsVerified";
 
 type Lang = "de" | "en";
 
@@ -106,7 +107,7 @@ export async function startSmsVerification(req: Request, res: Response) {
 
 export async function checkSmsVerification(req: Request, res: Response) {
     const lang = getLang(req);
-    const { phone, code } = req.body ?? {};
+    const { phone, code, purpose } = req.body ?? {}; // <-- add purpose
     const to = normalizePhone(String(phone ?? ""));
     const userCode = String(code ?? "").trim();
 
@@ -116,6 +117,14 @@ export async function checkSmsVerification(req: Request, res: Response) {
 
     if (result.ok) {
         console.log(`[OTP] verified for ${maskPhone(to)}`);
+
+        // NEW: if used for registration, issue a short-lived proof token
+        if (purpose === 'registration') {
+            const token = signOtpVerified({ phoneE164: to });
+            return res.json({ success: true, message: M.confirmOk[lang], otpToken: token });
+        }
+
+        // existing behavior for booking, etc.
         return res.json({ success: true, message: M.confirmOk[lang] });
     }
 

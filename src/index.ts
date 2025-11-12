@@ -12,6 +12,9 @@ import authRoutes from "./routes/authRoutes";
 import feedbackRoutesRoutes from "./routes/feedbackRoutes";
 import verifyPhoneRoutes from "./routes/verifyPhoneRoutes";
 import { purgeExpiredOtps } from "./services/otpService";
+import customerAuthRoutes from "./routes/customerAuthRoutes";
+import resetPasswordRoutes from "./routes/resetPasswordRoutes";
+import myReservationsRoutes from "./routes/myReservationsRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -44,6 +47,9 @@ app.use("/api/verify-email", verifyEmailRoutes);
 app.use("/api/admin", authRoutes);
 app.use("/api/feedback", feedbackRoutesRoutes);
 app.use("/api/verify-phone", verifyPhoneRoutes);
+app.use('/api/auth/customer', customerAuthRoutes);// /auth/customer/register|login|me
+app.use('/api/auth/customer', resetPasswordRoutes);
+app.use('/api/auth/customer', myReservationsRoutes);
 
 // 🧹 Purge expired OTPs every 10 minutes
 setInterval(() => {
