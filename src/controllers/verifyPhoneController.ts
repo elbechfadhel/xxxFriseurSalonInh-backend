@@ -46,14 +46,14 @@ const M = {
 
     smsBody: (lang: Lang, code: string, minutes: number) => {
         if (lang === "en") {
-            return `${code} is your BarbaChop verification code. Valid for ${minutes} minutes. Do not share it.`;
+            return `${code} is your XXXFriseursalon verification code. Valid for ${minutes} minutes. Do not share it.`;
         }
 
         // 🇩🇪 Allemand
         if (USE_ASCII_SMS) {
-            return `${code} ist Ihr BarbaChop Bestaetigungscode. Gueltig ${minutes} Minuten. Bitte nicht weitergeben.`;
+            return `${code} ist Ihr XXXFriseursalon Bestaetigungscode. Gueltig ${minutes} Minuten. Bitte nicht weitergeben.`;
         } else {
-            return `${code} ist Ihr BarbaChop Bestätigungscode. Gültig ${minutes} Minuten. Bitte nicht weitergeben.`;
+            return `${code} ist Ihr XXXFriseursalon Bestätigungscode. Gültig ${minutes} Minuten. Bitte nicht weitergeben.`;
         }
     },
 };
