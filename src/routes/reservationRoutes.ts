@@ -10,7 +10,6 @@ import { attachCustomerIfAny } from '../middleware/authCustomer';
 
 const router = express.Router();
 router.post('/', attachCustomerIfAny, createReservation);
-router.post('/', createReservation);
 router.get('/', getAllReservations);
 router.get('/availability', getAvailabilityForDay)
 router.delete('/:id', deleteReservation);

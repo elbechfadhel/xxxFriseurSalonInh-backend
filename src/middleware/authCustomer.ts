@@ -28,16 +28,25 @@ export async function attachCustomerIfAny(req: Request, _res: Response, next: Ne
     try {
         const header = req.headers.authorization || '';
         const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-        if (!token) return next();
+
+        if (!token) {
+            return next();
+        }
 
         const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; role?: string };
-        if (decoded.role !== 'customer') return next();
+        if (decoded.role !== 'customer') {
+            return next();
+        }
 
         const customer = await prisma.customer.findUnique({ where: { id: decoded.sub } });
-        if (customer) (req as any).customer = customer;
-    } catch {
-        // ignore
-    } finally {
-        next();
+        if (customer) {
+            (req as any).customer = customer;
+        }
+
+        return next();
+    } catch (err) {
+        console.warn('attachCustomerIfAny: ignoring invalid token', err);
+        return next();
     }
 }
+
