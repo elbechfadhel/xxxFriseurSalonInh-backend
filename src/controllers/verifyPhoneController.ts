@@ -10,6 +10,7 @@ import {
     verifyOtpCode,
 } from "../services/otpService";
 import {signOtpVerified} from "../middleware/smsVerified";
+import {prisma} from "../prisma/client";
 
 type Lang = "de" | "en";
 
@@ -79,31 +80,56 @@ export async function startSmsVerification(req: Request, res: Response) {
         const text = M.smsBody(lang, code, ttl);
         const needsUnicode = !USE_ASCII_SMS && /[^\x00-\x7F]/.test(text);
 
-
         const params: any = {
             to,
             from: FROM,
             text,
-            clientRef: `otp:${to}:${Date.now()}`
+            clientRef: `otp:${to}:${Date.now()}`,
         };
         if (needsUnicode) params.type = "unicode";
 
         const resp = await vonage.sms.send(params);
 
-        const ok =
-            Array.isArray(resp.messages) && resp.messages.some((m: any) => m.status === "0");
+        // treat msg as any to support both "error-text" and errorText
+        const msg: any = Array.isArray(resp.messages) ? resp.messages[0] : undefined;
+        const ok = msg?.status === "0";
+        const errorText =
+            ok ? null : msg?.["error-text"] ?? msg?.errorText ?? "Unknown Vonage error";
+
+        // ---- Log SMS attempt ----
+        await prisma.smsLog.create({
+            data: {
+                to,
+                status: ok ? "ok" : "error",
+                errorText,
+            },
+        });
+
         if (!ok) {
             console.error("Vonage send not OK:", resp);
             return res.status(500).json({ error: M.sendFail[lang] });
         }
 
-        console.log(`[OTP] sent to ${maskPhone(to)} (${lang}, ttl=${ttl}m, ascii=${USE_ASCII_SMS})`);
+        console.log(
+            `[OTP] sent to ${maskPhone(to)} (${lang}, ttl=${ttl}m, ascii=${USE_ASCII_SMS})`,
+        );
         return res.json({ success: true, message: M.sentOk[lang] });
     } catch (e: any) {
         console.error("Vonage SMS error:", e?.response?.data ?? e?.message ?? e);
+
+        // ---- Log exception case ----
+        await prisma.smsLog.create({
+            data: {
+                to,
+                status: "exception",
+                errorText: e?.message ?? "Unknown exception",
+            },
+        });
+
         return res.status(500).json({ error: M.sendFail[lang] });
     }
 }
+
 
 export async function checkSmsVerification(req: Request, res: Response) {
     const lang = getLang(req);

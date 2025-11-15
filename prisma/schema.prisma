@@ -71,3 +71,12 @@ model PhoneOtp {
 
   @@index([expiresAt])
 }
+model SmsLog {
+  id        String   @id @default(uuid())
+  to        String
+  status    String              // "ok" | "error" | "exception"
+  errorText String?
+  createdAt DateTime @default(now())
+
+  @@index([to, createdAt])
+}
