@@ -15,6 +15,7 @@ import { purgeExpiredOtps } from "./services/otpService";
 import customerAuthRoutes from "./routes/customerAuthRoutes";
 import resetPasswordRoutes from "./routes/resetPasswordRoutes";
 import myReservationsRoutes from "./routes/myReservationsRoutes";
+import smsLogRoutes from "./routes/smsLogRoutes";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -43,6 +44,7 @@ app.use(
 // ✅ API routes
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/sms-logs", smsLogRoutes);
 app.use("/api/verify-email", verifyEmailRoutes);
 app.use("/api/admin", authRoutes);
 app.use("/api/feedback", feedbackRoutesRoutes);
