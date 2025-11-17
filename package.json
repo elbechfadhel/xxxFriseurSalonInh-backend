@@ -6,12 +6,12 @@
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "npm run prisma:sync && tsc",
     "start": "node dist/index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init",
-    "prisma:sync": "prisma migrate deploy && prisma generate"
+    "prisma:generate": "npx prisma generate",
+    "prisma:migrate": "npx prisma migrate dev --name init",
+    "prisma:sync": "npx prisma migrate deploy && npx prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.19.0",
     "@vonage/server-sdk": "^3.25.1",
     "argon2": "^0.44.0",
     "bcryptjs": "^3.0.3",
@@ -23,8 +23,7 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
-    "nodemailer": "^7.0.4",
-    "prisma": "^5.0.0"
+    "nodemailer": "^7.0.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -32,6 +31,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/nodemailer": "^6.4.17",
+    "prisma": "^6.19.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.0"
   }
