@@ -3,6 +3,7 @@ import {
     createReservation,
     deleteReservation,
     getAllReservations,
+    getUpcomingReservations,
     updateReservation
 } from '../controllers/reservationController';
 import {getAvailabilityForDay} from "../controllers/availabilityController";
@@ -14,6 +15,7 @@ router.get('/', getAllReservations);
 router.get('/availability', getAvailabilityForDay)
 router.delete('/:id', deleteReservation);
 router.put('/:id', updateReservation);
+router.get('/', getUpcomingReservations);
 
 
 export default router;

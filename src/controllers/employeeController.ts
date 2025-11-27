@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { prisma } from '../prisma/client';
+import { Request, Response } from "express";
+import { prisma } from "../prisma/client";
 import fs from 'fs';
 
 // GET all employees
@@ -95,8 +95,11 @@ export const deleteEmployee = async (req: Request, res: Response) => {
     }
 };
 
-// GET employee photo
+
+
 export const getEmployeePhoto = async (req: Request, res: Response) => {
+
+
     try {
         const employee = await prisma.employee.findUnique({
             where: { id: req.params.id },
@@ -104,13 +107,52 @@ export const getEmployeePhoto = async (req: Request, res: Response) => {
         });
 
         if (!employee || !employee.photo) {
-            return res.status(404).send('No photo found');
+            console.log("⚠️ [getEmployeePhoto] No photo found for:", req.params.id);
+            return res.status(404).send("No photo found");
         }
 
-        res.set('Content-Type', 'image/jpeg'); // or image/png
-        res.send(employee.photo);
+        // Detach from Prisma type so we can safely narrow at runtime
+        const rawPhoto: unknown = employee.photo;
+        let photoBuffer: Buffer;
+
+        // CASE 1: Buffer (classic Node / local Postgres)
+        if (rawPhoto instanceof Buffer) {
+            photoBuffer = rawPhoto;
+        }
+        // CASE 2: Uint8Array (common with some drivers / Neon)
+        else if (rawPhoto instanceof Uint8Array) {
+            photoBuffer = Buffer.from(rawPhoto);
+        }
+        // CASE 3: string (hex or base64)
+        else if (typeof rawPhoto === "string") {
+            const photoStr = rawPhoto as string;
+
+
+            if (photoStr.startsWith("\\x")) {
+                // Postgres hex representation: \x89504e47...
+                const hex = photoStr.slice(2);
+                photoBuffer = Buffer.from(hex, "hex");
+            } else {
+                // Fallback: treat as base64
+                photoBuffer = Buffer.from(photoStr, "base64");
+            }
+        }
+        // CASE 4: Unknown → fail loudly
+        else {
+            console.error(
+                "❌ Unknown photo type at runtime:",
+                Object.prototype.toString.call(rawPhoto)
+            );
+            return res.status(500).send("Invalid photo format.");
+        }
+
+        // Your images in DB are PNGs (89504e47…)
+        res.set("Content-Type", "image/png");
+        res.send(photoBuffer);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to retrieve photo.' });
+        console.error("❌ [getEmployeePhoto] Error:", error);
+        res.status(500).json({ error: "Failed to retrieve photo." });
     }
 };
+
+

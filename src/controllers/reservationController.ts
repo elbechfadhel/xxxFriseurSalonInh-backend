@@ -108,7 +108,7 @@ export const updateReservation = async (req: Request, res: Response) => {
 
 
 // Get reservations (optionally filtered by employeeId and/or date)
-export const getAllReservations = async (req: Request, res: Response) => {
+export const getUpcomingReservations = async (req: Request, res: Response) => {
   try {
 
     const { employeeId, date } = req.query;
@@ -144,3 +144,35 @@ export const getAllReservations = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch reservations' });
   }
 };
+export const getAllReservations = async (req: Request, res: Response) => {
+  try {
+    const { employeeId } = req.query;
+
+    const where: Prisma.ReservationWhereInput = {};
+
+    if (employeeId) {
+      where.employeeId = String(employeeId);
+    }
+
+    const now = new Date();
+    const startOfTodayUTC = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
+    );
+
+    where.date = { gte: startOfTodayUTC };
+
+    const reservations = await prisma.reservation.findMany({
+      where,
+      orderBy: { date: 'asc' },
+      include: {
+        employee: { select: { name: true } },
+      },
+    });
+
+    res.json(reservations);
+  } catch (error) {
+    console.error('Error fetching upcoming reservations:', error);
+    res.status(500).json({ error: 'Failed to fetch reservations' });
+  }
+};
+
