@@ -3,6 +3,7 @@ import { prisma } from '../prisma/client';
 import {normalizeToSlotStartUTC} from "../lib/time";
 import { Prisma } from '@prisma/client';
 
+const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY as string;
 // Create a new reservation
 export const createReservation = async (req: Request, res: Response) => {
   try {
@@ -173,6 +174,71 @@ export const getAllReservations = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching upcoming reservations:', error);
     res.status(500).json({ error: 'Failed to fetch reservations' });
+  }
+};
+export const createReservationWithCaptcha = async (req: Request, res: Response) => {
+  try {
+    const {
+      customerName,
+      email,
+      phone,
+      service,
+      date,
+      employeeId,
+      captchaToken,
+    } = req.body;
+
+    if (!date || !employeeId || !captchaToken) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    if (!customerName) {
+      return res.status(400).json({ error: 'Missing customerName' });
+    }
+
+    // 1) Verify captcha with Google
+    const params = new URLSearchParams();
+    params.append('secret', RECAPTCHA_SECRET);
+    params.append('response', captchaToken);
+
+    const googleRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params,
+    });
+
+    const captchaResult = await googleRes.json();
+
+    if (!captchaResult.success) {
+      console.error('Captcha failed:', captchaResult['error-codes']);
+      return res.status(400).json({ error: 'Captcha verification failed' });
+    }
+
+    // (Optional) for v3 you might also check captchaResult.score here
+
+    // 2) Normalize slot
+    const slotStart = normalizeToSlotStartUTC(date);
+
+    // 3) Create reservation as guest with verificationMethod 'captcha'
+    const reservation = await prisma.reservation.create({
+      data: {
+        customerName,
+        email: email || null,
+        phone: phone || null,
+        service,
+        date: slotStart,
+        employeeId,
+        verificationMethod: 'account',
+        customerId: null,
+      },
+    });
+
+    return res.status(201).json(reservation);
+  } catch (error: any) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      return res.status(409).json({ error: 'Timeslot already taken' });
+    }
+    console.error('Error creating reservation with captcha:', error);
+    return res.status(500).json({ error: 'Something went wrong.' });
   }
 };
 

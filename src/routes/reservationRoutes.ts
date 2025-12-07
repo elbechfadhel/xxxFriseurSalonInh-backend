@@ -1,6 +1,6 @@
 import express from 'express';
 import {
-    createReservation,
+    createReservation, createReservationWithCaptcha,
     deleteReservation,
     getAllReservations,
     getUpcomingReservations,
@@ -11,6 +11,7 @@ import { attachCustomerIfAny } from '../middleware/authCustomer';
 
 const router = express.Router();
 router.post('/', attachCustomerIfAny, createReservation);
+router.post('/reservations-captcha', createReservationWithCaptcha);
 router.get('/', getAllReservations);
 router.get('/availability', getAvailabilityForDay)
 router.delete('/:id', deleteReservation);
