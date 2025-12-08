@@ -3,7 +3,9 @@ import { prisma } from '../prisma/client';
 import {normalizeToSlotStartUTC} from "../lib/time";
 import { Prisma } from '@prisma/client';
 
-const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY as string;
+/*const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY as string;*/
+
+const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY as string;
 // Create a new reservation
 export const createReservation = async (req: Request, res: Response) => {
   try {
@@ -195,23 +197,26 @@ export const createReservationWithCaptcha = async (req: Request, res: Response) 
       return res.status(400).json({ error: 'Missing customerName' });
     }
 
-    // 1) Verify captcha with Google
+    // 1) Verify captcha with Cloudflare Turnstile
     const params = new URLSearchParams();
-    params.append('secret', RECAPTCHA_SECRET);
+    params.append('secret', TURNSTILE_SECRET);
     params.append('response', captchaToken);
+// Optionally also send the client IP:
+// params.append('remoteip', req.ip || '');
 
-    const googleRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+    const turnstileRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params,
     });
 
-    const captchaResult = await googleRes.json();
+    const captchaResult = await turnstileRes.json();
 
     if (!captchaResult.success) {
-      console.error('Captcha failed:', captchaResult['error-codes']);
+      console.error('Turnstile failed:', captchaResult['error-codes']);
       return res.status(400).json({ error: 'Captcha verification failed' });
     }
+
 
     // (Optional) for v3 you might also check captchaResult.score here
 

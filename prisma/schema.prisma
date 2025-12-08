@@ -34,12 +34,14 @@ model Reservation {
   createdAt    DateTime @default(now())
   employeeId   String
   employee     Employee @relation(fields: [employeeId], references: [id])
-// NEW FIELDS:
-  verificationMethod VerificationMethod? // nullable for now (safe)
+
+  verificationMethod VerificationMethod?
   customerId   String?
   customer     Customer? @relation(fields: [customerId], references: [id])
 
   @@unique([employeeId, date], name: "uniq_employee_slot")
+  @@index([date])
+  @@index([employeeId, date])
 }
 model Employee {
   id            String         @id @default(uuid())
