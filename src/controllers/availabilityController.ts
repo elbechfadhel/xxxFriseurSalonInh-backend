@@ -4,9 +4,10 @@ import { prisma } from '../prisma/client';
 export const getAvailabilityForDay = async (req: Request, res: Response) => {
     try {
         const { employeeId, date } = req.query as { employeeId?: string; date?: string };
-        if (!employeeId || !date) return res.status(400).json({ error: 'employeeId and date are required' });
+        if (!employeeId || !date) {
+            return res.status(400).json({ error: 'employeeId and date are required' });
+        }
 
-        // Day bounds in UTC
         const day = new Date(date + 'T00:00:00.000Z');
         const next = new Date(day);
         next.setUTCDate(day.getUTCDate() + 1);
@@ -17,10 +18,18 @@ export const getAvailabilityForDay = async (req: Request, res: Response) => {
             orderBy: { date: 'asc' },
         });
 
-        // Return list of ISO strings (normalized by construction)
-        res.json(reservations.map(r => r.date.toISOString()));
+        const taken = reservations.map(r => {
+            const d =
+                r.date instanceof Date
+                    ? r.date
+                    : new Date(String(r.date)); // handle string from bad import
+            return d.toISOString();
+        });
+
+        return res.json(taken);
     } catch (e) {
         console.error('availability error', e);
-        res.status(500).json({ error: 'Failed to fetch availability' });
+        return res.status(500).json({ error: 'Failed to fetch availability' });
     }
 };
+
