@@ -8,7 +8,6 @@ export async function getMyReservations(req: Request, res: Response) {
         const items = await prisma.reservation.findMany({
             where: { customerId },
             orderBy: { date: 'desc' },
-            include: { employee: { select: { name: true } } },
         });
         return res.json(items);
     } catch (e) {

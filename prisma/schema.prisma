@@ -1,11 +1,13 @@
+// prisma/schema.prisma
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"] // needed for Turso adapter
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  // local file used for migrations; Turso is reached via adapter in code
+  url      = "file:./dev.db"
 }
 
 enum VerificationMethod {
@@ -21,37 +23,38 @@ model Customer {
   phoneE164     String?        @unique
   phoneVerified Boolean        @default(false)
   createdAt     DateTime       @default(now())
-  reservations  Reservation[]
 }
 
 model Reservation {
-  id           String   @id @default(uuid())
-  customerName String
-  email        String?
-  phone        String?
-  service      String
-  date         DateTime
-  createdAt    DateTime @default(now())
-  employeeId   String
-  employee     Employee @relation(fields: [employeeId], references: [id])
+  id                 String   @id @default(uuid())
+  customerName       String
+  email              String?
+  phone              String?
+  service            String
+  date               DateTime
+  createdAt          DateTime @default(now())
+
+  employeeId         String
 
   verificationMethod VerificationMethod?
-  customerId   String?
-  customer     Customer? @relation(fields: [customerId], references: [id])
+  customerId         String?
 
   @@unique([employeeId, date], name: "uniq_employee_slot")
   @@index([date])
   @@index([employeeId, date])
 }
+
+
 model Employee {
-  id            String         @id @default(uuid())
-  name          String
-  nameAr        String?
-  photo         Bytes?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  reservations  Reservation[]
+  id           String         @id @default(uuid())
+  name         String
+  nameAr       String?
+  // SQLite + Prisma don't support Bytes; use String? for URL/base64 instead
+  photo        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
+
 model Feedback {
   id        String   @id @default(cuid())
   name      String
@@ -60,6 +63,7 @@ model Feedback {
   approved  Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
 model PhoneOtp {
   id           String   @id @default(cuid())
   phone        String   @unique
@@ -73,10 +77,11 @@ model PhoneOtp {
 
   @@index([expiresAt])
 }
+
 model SmsLog {
   id        String   @id @default(uuid())
   to        String
-  status    String              // "ok" | "error" | "exception"
+  status    String   // "ok" | "error" | "exception"
   errorText String?
   createdAt DateTime @default(now())
 

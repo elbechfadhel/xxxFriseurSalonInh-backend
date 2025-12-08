@@ -35,10 +35,7 @@ export const listSmsLogs = async (req: Request, res: Response) => {
 
         const where: Prisma.SmsLogWhereInput = {};
 
-        if (phoneFilter) {
-            // substring / partial match, case-insensitive
-            where.to = { contains: phoneFilter, mode: "insensitive" };
-        }
+
 
         if (statusFilter) {
             where.status = statusFilter;

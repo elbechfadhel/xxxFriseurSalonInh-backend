@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "Reservation" ALTER COLUMN "email" DROP NOT NULL;

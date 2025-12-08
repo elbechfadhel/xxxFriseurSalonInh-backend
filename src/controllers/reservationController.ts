@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { prisma } from '../prisma/client';
+//import { prisma } from '../prisma/client';
 import {normalizeToSlotStartUTC} from "../lib/time";
 import { Prisma } from '@prisma/client';
-
+import { prisma } from "../prisma/prisma";
 /*const RECAPTCHA_SECRET = process.env.RECAPTCHA_SECRET_KEY as string;*/
 
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY as string;
@@ -134,11 +134,6 @@ export const getUpcomingReservations = async (req: Request, res: Response) => {
     const reservations = await prisma.reservation.findMany({
       where,
       orderBy: { date: 'asc' },
-      include: {
-        employee: {
-          select: { name: true }
-        },
-      },
     });
 
     res.json(reservations);
@@ -167,9 +162,6 @@ export const getAllReservations = async (req: Request, res: Response) => {
     const reservations = await prisma.reservation.findMany({
       where,
       orderBy: { date: 'asc' },
-      include: {
-        employee: { select: { name: true } },
-      },
     });
 
     res.json(reservations);

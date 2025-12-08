@@ -45,7 +45,6 @@ export async function attachCustomerIfAny(req: Request, _res: Response, next: Ne
 
         return next();
     } catch (err) {
-        console.warn('attachCustomerIfAny: ignoring invalid token', err);
         return next();
     }
 }
