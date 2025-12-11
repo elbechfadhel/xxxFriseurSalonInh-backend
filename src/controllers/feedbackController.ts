@@ -1,6 +1,6 @@
 // src/controllers/feedbackController.ts
 import { Request, Response } from "express";
-import { prisma } from "../prisma/client";
+import { prisma } from "../prisma/prisma";
 
 export const createFeedback = async (req: Request, res: Response) => {
     try {
